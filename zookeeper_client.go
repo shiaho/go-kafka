@@ -7,8 +7,8 @@ import (
 )
 
 type ZookeeperConfig struct {
-	servers     []string
-	recvTimeout time.Duration
+	Servers     []string      `json:"servers"`
+	RecvTimeout time.Duration `json:"recv_timeout"`
 }
 
 type ZookeeperClient struct {
@@ -24,13 +24,25 @@ func NewZookeeperClient(config *ZookeeperConfig) *ZookeeperClient {
 
 func (z *ZookeeperClient) Connect() {
 	var err error
-	z.zkConn, _, err = zk.Connect(z.config.servers, z.config.recvTimeout)
+	z.zkConn, _, err = zk.Connect(z.config.Servers, z.config.RecvTimeout)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func (z *ZookeeperClient) getVlaues(pp string, cps []string) map[string]string {
+func (z *ZookeeperClient) getVlaues(paths []string) map[string]string {
+	res := make(map[string]string)
+	for _, p := range paths {
+		value, _, err := z.zkConn.Get(p)
+		if err != nil {
+			fmt.Println(err)
+		}
+		res[p] = string(value)
+	}
+	return res
+}
+
+func (z *ZookeeperClient) getChildrenVlaues(pp string, cps []string) map[string]string {
 	res := make(map[string]string)
 	for _, cp := range cps {
 		value, _, err := z.zkConn.Get(pp + "/" + cp)
@@ -42,8 +54,6 @@ func (z *ZookeeperClient) getVlaues(pp string, cps []string) map[string]string {
 	return res
 }
 
-
-
 func (z *ZookeeperClient) tree(root string) {
 	children, _, err := z.zkConn.Children(root)
 	if err != nil {
@@ -54,12 +64,11 @@ func (z *ZookeeperClient) tree(root string) {
 		if root[len(root)-1:len(root)] != "/" {
 			cp = root + "/" + cc
 		}
-		z.getChildren(cp)
+		z.getChildren(cp, true)
 	}
 }
 
-
-func (z *ZookeeperClient) getChildren(pp string) {
+func (z *ZookeeperClient) getChildren(pp string, recursion bool) []string {
 	children, _, err := z.zkConn.Children(pp)
 	if err != nil {
 		panic(err)
@@ -77,13 +86,31 @@ func (z *ZookeeperClient) getChildren(pp string) {
 	for _, cp := range children {
 		ps = append(ps, pp+"/"+cp)
 	}
-
-	for _, p := range ps {
-		z.getChildren(p)
+	var psc = ps[:]
+	if recursion {
+		for _, p := range psc {
+			ps = append(ps, z.getChildren(p, true)...)
+		}
 	}
+	//	fmt.Printf("pp: %v, psc: %v\n", pp, psc)
+	return ps
 }
-
 
 func (z *ZookeeperClient) treeAll() {
 	z.tree("/")
+}
+
+func (z *ZookeeperClient) deleteDir(path string) (err error) {
+	children := z.getChildren(path, false)
+	if len(children) > 0 {
+		for _, c := range children {
+			z.deleteDir(c)
+		}
+	}
+	err = z.deleteNode(path)
+	return err
+}
+
+func (z *ZookeeperClient) deleteNode(path string) error {
+	return z.zkConn.Delete(path, 0)
 }
