@@ -30,7 +30,7 @@ func (z *ZookeeperClient) Connect() {
 	}
 }
 
-func (z *ZookeeperClient) getVlaues(paths []string) map[string]string {
+func (z *ZookeeperClient) getValues(paths []string) map[string]string {
 	res := make(map[string]string)
 	for _, p := range paths {
 		value, _, err := z.zkConn.Get(p)
@@ -42,7 +42,7 @@ func (z *ZookeeperClient) getVlaues(paths []string) map[string]string {
 	return res
 }
 
-func (z *ZookeeperClient) getChildrenVlaues(pp string, cps []string) map[string]string {
+func (z *ZookeeperClient) getChildrenValues(pp string, cps []string) map[string]string {
 	res := make(map[string]string)
 	for _, cp := range cps {
 		value, _, err := z.zkConn.Get(pp + "/" + cp)

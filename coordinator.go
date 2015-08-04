@@ -117,7 +117,7 @@ func (z *ZookeeperCoordinator) createConsumersDir() (err error) {
 
 func (z *ZookeeperCoordinator) getConsumerNum(topic string) (num int) {
 	cpaths := z.zkClient.getChildren(z.groupPath+"/ids", false)
-	consumersInfo := z.zkClient.getVlaues(cpaths)
+	consumersInfo := z.zkClient.getValues(cpaths)
 
 	for _, c := range consumersInfo {
 		ci := &ConsumerInfo{}
@@ -202,13 +202,13 @@ func (z *ZookeeperCoordinator) watchBrokers() {
 		if err != nil {
 			logger.Println(err)
 		}
-		old_brokers := z.zkClient.getChildrenVlaues(brokerIdsPath, old_childrens)
+		old_brokers := z.zkClient.getChildrenValues(brokerIdsPath, old_childrens)
 		e := <-event
 		switch e.Type {
 		case zk.EventNodeChildrenChanged:
 			time.Sleep(time.Millisecond * 500)
 			new_childrens, _, err := z.zkClient.zkConn.Children(brokerIdsPath)
-			new_brokers := z.zkClient.getChildrenVlaues(brokerIdsPath, new_childrens)
+			new_brokers := z.zkClient.getChildrenValues(brokerIdsPath, new_childrens)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -225,12 +225,12 @@ func (z *ZookeeperCoordinator) watchPartitionOwner(topic string) {
 		if err != nil {
 			logger.Println(err)
 		}
-		old_owners := z.zkClient.getChildrenVlaues(ownerPath, old_childrens)
+		old_owners := z.zkClient.getChildrenValues(ownerPath, old_childrens)
 		e := <-event
 		switch e.Type {
 		case zk.EventNodeChildrenChanged:
 			new_childrens, _, err := z.zkClient.zkConn.Children(ownerPath)
-			new_owners := z.zkClient.getChildrenVlaues(ownerPath, new_childrens)
+			new_owners := z.zkClient.getChildrenValues(ownerPath, new_childrens)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -247,10 +247,10 @@ func (z *ZookeeperCoordinator) watchConsumerGroup(groupId string) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		oldConsumers := z.zkClient.getChildrenVlaues(consumersPath, oldChildren)
+		oldConsumers := z.zkClient.getChildrenValues(consumersPath, oldChildren)
 		e := <-event
 		newChildren, _, err := z.zkClient.zkConn.Children(consumersPath)
-		newConsumers := z.zkClient.getChildrenVlaues(consumersPath, newChildren)
+		newConsumers := z.zkClient.getChildrenValues(consumersPath, newChildren)
 		if err != nil {
 			fmt.Println(err)
 		}
