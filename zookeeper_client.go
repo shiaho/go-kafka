@@ -71,12 +71,12 @@ func (z *ZookeeperClient) tree(root string) {
 func (z *ZookeeperClient) getChildren(pp string, recursion bool) []string {
 	children, _, err := z.zkConn.Children(pp)
 	if err != nil {
-		panic(err)
+		logger.Panicf("error: %v", err)
 	}
 
 	value, _, err := z.zkConn.Get(pp)
 	if err != nil {
-		panic(err)
+		logger.Panicf("error: %v", err)
 	}
 	if len(value) > 0 {
 		fmt.Printf("path: %v, value: %v\n", pp, string(value))
@@ -94,6 +94,14 @@ func (z *ZookeeperClient) getChildren(pp string, recursion bool) []string {
 	}
 	//	fmt.Printf("pp: %v, psc: %v\n", pp, psc)
 	return ps
+}
+
+func (z *ZookeeperClient) getChildrenNode(pp string, recursion bool) []string {
+	children, _, err := z.zkConn.Children(pp)
+	if err != nil {
+		logger.Printf("Error: %v", err)
+	}
+	return children
 }
 
 func (z *ZookeeperClient) treeAll() {

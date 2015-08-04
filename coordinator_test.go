@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"fmt"
 	"testing"
 	"time"
 )
@@ -21,9 +20,29 @@ func TestGetConsumerNum(t *testing.T) {
 	zc := NewZookeeperCoordinator(zkClient)
 	zkClient.Connect()
 	//	zc.watchBrokers()
-	zc.JoinCumsuerGroup("test_group", "test-0", map[string]int{})
-	//	zc.watchConsumerGroup("devel-group")
-	//	zkClient.treeAll()
-	fmt.Println(zc.getConsumerNum("metric_thrift_2"))
-	zkClient.treeAll()
+	zc.SetHandleOwnerChange(func(oldOwner map[string]string, newOwner map[string]string) {
+		logger.Println(zc.getConsumerNum("metric_thrift_2"))
+		zc.assignPartition("metric_thrift_2")
+		zkClient.treeAll()
+	})
+	zc.JoinCumsuerGroup("test_group", "test-0", map[string]int{"metric_thrift_2": 2})
+	//	go func() {
+	//		time.Sleep(time.Second * 2)
+	//		logger.Println("----------------------------------------")
+	//		time.Sleep(time.Second * 2)
+	//		zkClient.treeAll()
+	//		logger.Println("----------------------------------------")
+	//		time.Sleep(time.Second * 2)
+	//		zkClient.treeAll()
+	//		logger.Println("----------------------------------------")
+	//		time.Sleep(time.Second * 2)
+	//		zkClient.treeAll()
+	//		logger.Println("----------------------------------------")
+	//		time.Sleep(time.Second * 2)
+	//		zkClient.treeAll()
+	//		logger.Println("----------------------------------------")
+	//	}()
+	zc.assignPartition("metric_thrift_2")
+	zc.watchPartitionOwner("metric_thrift_2")
+
 }
